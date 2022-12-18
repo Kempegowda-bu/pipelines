@@ -1,0 +1,55 @@
+pipeline
+{
+   agent any
+   tools
+    {
+       maven "MAVEN"
+    }
+
+   stages
+   {
+     stage ('continous download')
+     {
+         steps
+         {
+            git 'https://github.com/keshavr21/maven_test.git' 
+         }
+     }
+     stage ('continous build')
+     {
+         steps
+         {
+             sh 'mvn clean package'
+         }
+     }
+     stage ('continous archive')
+     {
+         steps
+         {
+             archiveArtifacts artifacts: '**/*.war', followSymlinks: false
+         }
+     }
+     stage ('continous deploy')
+     {
+         steps
+         {
+            deploy adapters: [tomcat9(credentialsId: 'a049abac-7ee2-4063-a11d-d02179a20c1b', path: '', url: 'http://65.0.97.57:8080/')], contextPath: 'webapp', war: '**/*.war' 
+         }
+     }
+   }
+   post 
+   {
+       success
+       {
+           sh 'echo job success deploying to production server'
+       }
+       failure
+       {
+         mail bcc: '', body: 'please look into your job ', cc: 'koranjitha@gmail.com', from: '', replyTo: '', subject: 'regarding your job failure', to: 'brmahesh09@gmail.com'  
+       }
+       always
+       {
+           sh 'echo $JOB_NAME'
+       }
+   }
+}
