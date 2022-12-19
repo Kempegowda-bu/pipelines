@@ -1,0 +1,75 @@
+pipeline
+{
+   agent any
+   tools
+    {
+       maven "MAVEN"
+    }
+
+   stages
+   {
+     stage ('continous download')
+     {
+         steps
+         {
+            git 'https://github.com/keshavr21/maven_test.git' 
+         }
+     }
+     stage ('continous build')
+     {
+         steps
+         {
+             sh 'mvn clean package'
+         }
+     }
+     stage ('continous archive')
+     {
+         steps
+         {
+             archiveArtifacts artifacts: '**/*.war', followSymlinks: false
+         }
+     }
+     stage ('continous deploy')
+     {
+         steps
+         {
+            deploy adapters: [tomcat9(credentialsId: 'tomcat', path: '', url: 'http://35.154.115.13:8080')], contextPath: 'webapp', war: '**/*.war'
+         }
+     }
+     stage ('continous test')
+     {
+         steps
+         {
+            git branch: 'development', url: 'https://github.com/keshavr21/test_cases.git'
+            sh 'java -jar ${WORKSPACE}/testing.jar'
+         }
+     }
+     //stage ('continous delivery')
+     //{
+        // steps
+        // {
+           //  input message: 'waiting for approval', submitter: 'admin'
+           // deploy adapters: [tomcat9(credentialsId: 'tomcat', path: '', url: 'http://35.154.115.13:8080')], contextPath: 'devapp', war: '**/*.war'
+        // }
+    // }
+   }
+   post 
+   {
+       success
+       {
+          deploy adapters: [tomcat9(credentialsId: 'tomcat', path: '', url: 'http://35.154.115.13:8080')], contextPath: 'devapp', war: '**/*.war' 
+       }
+       failure
+       {
+         mail bcc: '', body: 'please look into your job ', cc: 'kempegowda@gmail.com', from: '', replyTo: '', subject: 'regarding your job failure', to: 'brmahesh09@gmail.com'  
+       }
+       always
+       {
+           sh 'echo $JOB_NAME'
+       }
+       aborted
+       {
+           sh 'echo "$JOB_NAME aborted"'
+       }
+   }
+}
