@@ -1,0 +1,26 @@
+pipeline {
+    agent none
+    stages {
+        stage('parallel stages') {
+            parallel {
+                stage('stage1') {
+                    agent { label 'master' }
+                    steps {
+                        git branch: 'main', url: 'https://github.com/Kempegowda-bu/pipelines.git'
+                    }
+                }
+                stage('Test') {
+                    agent { label 'linux_slave' }
+                    steps {
+                        git 'https://github.com/Kempegowda-bu/myproject.git'
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
+
+
