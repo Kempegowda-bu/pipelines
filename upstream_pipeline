@@ -1,0 +1,17 @@
+pipeline {
+    agent any
+    stages {
+        stage('Build') {
+            steps {
+                echo "this job will set as upstream"
+            }
+        }
+    }
+    post {
+        always {
+            build(
+                job: 'parallel_stages',wait: true,propagate: true 
+            )
+        }
+    }
+}
